@@ -29,6 +29,11 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  icons: { // Added icons property
+    icon: '/muze.avif',
+    shortcut: '/muze.avif',
+    apple: '/muze.avif',
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
