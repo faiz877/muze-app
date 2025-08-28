@@ -2,29 +2,36 @@
   "name": "muze-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "ws": "ts-node --esm graphql/ws-server.ts"
   },
   "dependencies": {
     "@apollo/client": "^4.0.2",
     "@apollo/server": "^5.0.0",
     "@as-integrations/next": "^4.0.0",
+    "@graphql-tools/schema": "^10.0.25",
     "graphql": "^16.11.0",
+    "graphql-subscriptions": "^3.0.0",
     "graphql-tag": "^2.12.6",
     "graphql-ws": "^6.0.6",
     "next": "15.5.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "subscriptions-transport-ws": "^0.11.0"
+    "subscriptions-transport-ws": "^0.11.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ws": "^8.18.1",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

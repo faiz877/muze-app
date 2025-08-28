@@ -1,4 +1,4 @@
-import { Post } from '@/types/graphql';
+import type { Post } from '../types/graphql.ts';
 export const MOCK_POSTS: Post[] = [
   {
     id: '1',
