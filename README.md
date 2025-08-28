@@ -6,6 +6,10 @@ A social media feed application built with Next.js and React, demonstrating real
 
 This project simulates a dynamic social media feed, showcasing core front-end development patterns for a job assessment.
 
+## Live Demo
+
+Experience the live application here: [https://muze-app-two.vercel.app/](https://muze-app-two.vercel.app/)
+
 ## Getting Started
 
 ### Prerequisites
