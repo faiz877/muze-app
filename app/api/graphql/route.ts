@@ -12,6 +12,7 @@ let posts: Post[] = [...MOCK_POSTS];
 // Topics for subscriptions
 const NEW_POST_TOPIC = 'NEW_POST';
 const POST_LIKED_TOPIC = 'POST_LIKED';
+const POST_REPOSTED_TOPIC = 'POST_REPOSTED';
 
 // Auto-generate new posts every 30 seconds for demo purposes (less frequent for better UX)
 let postIdCounter = posts.length + 1;
@@ -97,6 +98,20 @@ const resolvers = {
       // Publish the liked post update
       pubsub.publish(POST_LIKED_TOPIC, { postLiked: updatedPost });
       console.log(`👍 Post liked: ${id}, new likes: ${updatedPost.likes}`);
+      
+      return updatedPost; 
+    },
+    repostPost: (_: any, { id }: { id: string }) => {
+      const postIndex = posts.findIndex((p) => p.id === id);
+      if (postIndex === -1) {
+        throw new Error(`Post with ID ${id} not found.`);
+      }
+      const updatedPost = { ...posts[postIndex], reposts: posts[postIndex].reposts + 1 };
+      posts[postIndex] = updatedPost;
+      
+      // Publish the reposted post update
+      pubsub.publish(POST_REPOSTED_TOPIC, { postReposted: updatedPost });
+      console.log(`🔄 Post reposted: ${id}, new reposts: ${updatedPost.reposts}`);
       
       return updatedPost; 
     },

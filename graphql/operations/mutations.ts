@@ -10,4 +10,13 @@ export const LIKE_POST_MUTATION = gql`
   }
 `;
 
+export const REPOST_POST_MUTATION = gql`
+  mutation RepostPost($id: ID!) {
+    repostPost(id: $id) {
+      id
+      reposts
+    }
+  }
+`;
+
 

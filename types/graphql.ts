@@ -29,6 +29,9 @@ export interface PostCardProps {
     onRepost?: (id: string) => void;
     onShare?: (id: string) => void;
     isLiking?: boolean;
+    isLiked?: boolean;
+    isReposting?: boolean;
+    isReposted?: boolean;
     className?: string;
 }
 

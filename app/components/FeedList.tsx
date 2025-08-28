@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useQuery, useMutation, ApolloError } from '@apollo/client/react';
 import { GET_POSTS_QUERY } from '@/graphql/operations/queries';
-import { LIKE_POST_MUTATION } from '@/graphql/operations/mutations';
+import { LIKE_POST_MUTATION, REPOST_POST_MUTATION } from '@/graphql/operations/mutations';
 import type { Post, FeedListProps } from '@/types/graphql';
 import { useFeedStore } from '@/store/feedStore';
 import { PostCard } from './PostCard';
@@ -47,6 +47,20 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
     }
   });
 
+  // Repost mutation with optimistic updates
+  const [repostPost, { loading: reposting }] = useMutation(REPOST_POST_MUTATION, {
+    errorPolicy: 'all',
+    onError: (error) => {
+      console.error('Repost mutation error:', error);
+    }
+  });
+
+  // Track liked posts state locally
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  
+  // Track reposted posts state locally
+  const [repostedPosts, setRepostedPosts] = useState<Set<string>>(new Set());
+
   // Event handlers - defined with useCallback to prevent unnecessary re-renders
   const handleRetry = useCallback(() => {
     setRetryCount(prev => prev + 1);
@@ -62,20 +76,93 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
     const target = posts.find((p) => p.id === id);
     if (!target) return;
     
-    const optimistic: Post = { ...target, likes: target.likes + 1 };
+    const isCurrentlyLiked = likedPosts.has(id);
+    const newLikesCount = isCurrentlyLiked ? target.likes - 1 : target.likes + 1;
+    
+    // Optimistic UI update
+    const optimistic: Post = { ...target, likes: newLikesCount };
     updatePost(optimistic);
+    
+    // Update liked posts state
+    setLikedPosts(prev => {
+      const newSet = new Set(prev);
+      if (isCurrentlyLiked) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
     
     try {
       const response = await likePost({ variables: { id } });
       const updated = response.data?.likePost as Post | undefined;
       if (updated) {
-        updatePost(updated);
+        // In a real app, the server would return the correct like count
+        // For now, we'll trust our optimistic update
+        updatePost({ ...updated, likes: newLikesCount });
       }
     } catch (error) {
       console.error('Like error:', error);
+      // Revert optimistic changes on error
       updatePost(target);
+      setLikedPosts(prev => {
+        const newSet = new Set(prev);
+        if (isCurrentlyLiked) {
+          newSet.add(id); // Revert: add back if we tried to remove
+        } else {
+          newSet.delete(id); // Revert: remove if we tried to add
+        }
+        return newSet;
+      });
     }
-  }, [posts, updatePost, likePost]);
+  }, [posts, updatePost, likePost, likedPosts]);
+
+  const handleRepost = useCallback(async (id: string) => {
+    const target = posts.find((p) => p.id === id);
+    if (!target) return;
+    
+    const isCurrentlyReposted = repostedPosts.has(id);
+    const newRepostsCount = isCurrentlyReposted ? target.reposts - 1 : target.reposts + 1;
+    
+    // Optimistic UI update
+    const optimistic: Post = { ...target, reposts: newRepostsCount };
+    updatePost(optimistic);
+    
+    // Update reposted posts state
+    setRepostedPosts(prev => {
+      const newSet = new Set(prev);
+      if (isCurrentlyReposted) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+    
+    try {
+      const response = await repostPost({ variables: { id } });
+      const updated = response.data?.repostPost as Post | undefined;
+      if (updated) {
+        // In a real app, the server would return the correct repost count
+        // For now, we'll trust our optimistic update
+        updatePost({ ...updated, reposts: newRepostsCount });
+      }
+    } catch (error) {
+      console.error('Repost error:', error);
+      // Revert optimistic changes on error
+      updatePost(target);
+      setRepostedPosts(prev => {
+        const newSet = new Set(prev);
+        if (isCurrentlyReposted) {
+          newSet.add(id); // Revert: add back if we tried to remove
+        } else {
+          newSet.delete(id); // Revert: remove if we tried to add
+        }
+        return newSet;
+      });
+    }
+  }, [posts, updatePost, repostPost, repostedPosts]);
 
   // Update store when data changes
   useEffect(() => {
@@ -190,9 +277,12 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
                   post={post} 
                   onLike={handleLike}
                   onComment={(id) => console.log('Comment on:', id)}
-                  onRepost={(id) => console.log('Repost:', id)}
+                  onRepost={handleRepost}
                   onShare={(id) => console.log('Share:', id)}
                   isLiking={liking}
+                  isLiked={likedPosts.has(post.id)}
+                  isReposting={reposting}
+                  isReposted={repostedPosts.has(post.id)}
                 />
               </div>
             ))}
@@ -238,7 +328,7 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
         </div>
       </div>
     </div>
-  ), [posts, liking, isLoadingMore, hasMore, handleLike]);
+  ), [posts, liking, reposting, isLoadingMore, hasMore, handleLike, handleRepost, likedPosts, repostedPosts]);
 
   // CONDITIONAL RETURNS MUST COME AFTER ALL HOOKS
   if (networkError && posts.length === 0) {

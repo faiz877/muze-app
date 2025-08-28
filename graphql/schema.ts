@@ -21,6 +21,7 @@ export const typeDefs = gql`
 
   type Mutation {
     likePost(id: ID!): Post!
+    repostPost(id: ID!): Post!
   }
 
   type Subscription {

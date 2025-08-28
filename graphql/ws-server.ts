@@ -15,6 +15,7 @@ let posts: Post[] = [...MOCK_POSTS];
 const pubsub = new PubSub();
 const NEW_POST_TOPIC = 'NEW_POST';
 const POST_LIKED_TOPIC = 'POST_LIKED';
+const POST_REPOSTED_TOPIC = 'POST_REPOSTED';
 
 // --- Subscription publishing logic ---
 let postIdCounter = posts.length + 1;
@@ -53,6 +54,15 @@ const resolvers = {
         throw new Error(`Post with ID ${id} not found.`);
       }
       const updatedPost = { ...posts[postIndex], likes: posts[postIndex].likes + 1 };
+      posts[postIndex] = updatedPost;
+      return updatedPost;
+    },
+    repostPost: (_: any, { id }: { id: string }) => {
+      const postIndex = posts.findIndex((p) => p.id === id);
+      if (postIndex === -1) {
+        throw new Error(`Post with ID ${id} not found.`);
+      }
+      const updatedPost = { ...posts[postIndex], reposts: posts[postIndex].reposts + 1 };
       posts[postIndex] = updatedPost;
       return updatedPost;
     },

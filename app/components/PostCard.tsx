@@ -30,12 +30,14 @@ export const PostCard: React.FC<PostCardProps> = ({
   onRepost,
   onShare,
   isLiking = false,
+  isLiked = false,
+  isReposting = false,
+  isReposted = false,
   className = ''
 }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [hasImageError, setHasImageError] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
   
   // Truncate long content
@@ -46,7 +48,6 @@ export const PostCard: React.FC<PostCardProps> = ({
 
   // Handle like with optimistic UI
   const handleLike = () => {
-    setIsLiked(!isLiked);
     onLike(post.id);
   };
 
@@ -172,15 +173,30 @@ export const PostCard: React.FC<PostCardProps> = ({
                 e.stopPropagation();
                 handleLike();
               }}
-              className="flex items-center gap-2 hover:text-red-600 transition-colors group"
+              className={`flex items-center gap-2 transition-all duration-200 group ${
+                isLiked 
+                  ? 'text-red-600' 
+                  : 'text-gray-500 hover:text-red-600'
+              }`}
               disabled={isLiking}
             >
-              <div className="p-2 rounded-full group-hover:bg-red-50 transition-colors">
-                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={`p-2 rounded-full transition-all duration-200 ${
+                isLiked 
+                  ? 'bg-red-50' 
+                  : 'group-hover:bg-red-50'
+              }`}>
+                <svg 
+                  className={`w-[18px] h-[18px] transition-all duration-200 ${
+                    isLiked ? 'animate-wiggle' : ''
+                  }`} 
+                  fill={isLiked ? 'currentColor' : 'none'} 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
               </div>
-              <span>{post.likes.toLocaleString()}</span>
+              <span className={isLiked ? 'font-medium' : ''}>{post.likes.toLocaleString()}</span>
             </button>
 
             {/* Comment */}
@@ -205,14 +221,30 @@ export const PostCard: React.FC<PostCardProps> = ({
                 e.stopPropagation();
                 onRepost?.(post.id);
               }}
-              className="flex items-center gap-2 hover:text-green-600 transition-colors group"
+              className={`flex items-center gap-2 transition-all duration-200 group ${
+                isReposted 
+                  ? 'text-green-600' 
+                  : 'text-gray-500 hover:text-green-600'
+              }`}
+              disabled={isReposting}
             >
-              <div className="p-2 rounded-full group-hover:bg-green-50 transition-colors">
-                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={`p-2 rounded-full transition-all duration-200 ${
+                isReposted 
+                  ? 'bg-green-50' 
+                  : 'group-hover:bg-green-50'
+              }`}>
+                <svg 
+                  className={`w-[18px] h-[18px] transition-all duration-200 ${
+                    isReposted ? 'animate-wiggle' : ''
+                  }`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </div>
-              <span>{post.reposts.toLocaleString()}</span>
+              <span className={isReposted ? 'font-medium' : ''}>{post.reposts.toLocaleString()}</span>
             </button>
 
             {/* Share */}
