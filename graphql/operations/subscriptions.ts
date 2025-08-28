@@ -2,7 +2,7 @@
 import { gql } from '@apollo/client';
 
 export const NEW_POST_SUBSCRIPTION = gql`
-  subscription NewPosts {
+  subscription newPost {
     newPost {
       id
       author

@@ -11,6 +11,7 @@ export interface Post {
     imageUrl: string | null;
     isReply: boolean;
     parentPostId: string | null;
+    profileImageUrl: string | null;
 }
 
 export interface User {

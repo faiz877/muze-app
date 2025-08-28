@@ -1,5 +1,4 @@
-'use client';
-
+import { MOCK_POSTS, MOCK_POSTS_POOL } from '@/api/mockData';
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useQuery, useMutation, ApolloError } from '@apollo/client/react';
 import { GET_POSTS_QUERY } from '@/graphql/operations/queries';
@@ -10,7 +9,7 @@ import { PostCard } from './PostCard';
 import { Loading, FeedSkeleton } from './ui/Loading';
 import { EmptyFeed, APIError, NetworkError, ErrorBoundary } from './ui/ErrorStates';
 
-const PAGE_SIZE = 8; // Show more posts initially for better UX
+const PAGE_SIZE = 5; // Show fewer posts initially to make infinite scroll more noticeable
 const INTERSECTION_THRESHOLD = 0.1;
 const DEBOUNCE_MS = 300;
 
@@ -23,21 +22,11 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Main posts query with error handling
-  const { data, loading, error, fetchMore, refetch } = useQuery<{ posts: Post[] }>(GET_POSTS_QUERY, {
-    variables: { page: 1, limit: PAGE_SIZE },
-    notifyOnNetworkStatusChange: true,
-    errorPolicy: 'all',
-    onError: (error) => {
-      console.error('Posts query error:', error);
-      setNetworkError(error);
-      setError(error.message);
-    },
-    onCompleted: () => {
-      setNetworkError(null);
-      setError(null);
-    }
-  });
+  
+
+  
+
+  
 
   // Like mutation with optimistic updates
   const [likePost, { loading: liking }] = useMutation(LIKE_POST_MUTATION, {
@@ -65,12 +54,26 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
   const handleRetry = useCallback(() => {
     setRetryCount(prev => prev + 1);
     setNetworkError(null);
-    refetch();
-  }, [refetch]);
+    // refetch(); // Removed as useQuery is no longer used
+  }, []);
 
   const handleNewPost = useCallback(() => {
     console.log('New post clicked');
   }, []);
+
+  // Simulate real-time updates with polling
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const randomIndex = Math.floor(Math.random() * MOCK_POSTS_POOL.length);
+      const newPost = {
+        ...MOCK_POSTS_POOL[randomIndex],
+        id: String(Math.random()),
+        timestamp: new Date().toISOString(),
+      };
+      prependPost(newPost);
+    }, 6500);
+    return () => clearInterval(interval);
+  }, [prependPost]);
 
   const handleLike = useCallback(async (id: string) => {
     const target = posts.find((p) => p.id === id);
@@ -164,52 +167,44 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
     }
   }, [posts, updatePost, repostPost, repostedPosts]);
 
-  // Update store when data changes
+  // Initial load of posts from MOCK_POSTS
   useEffect(() => {
-    const incoming = (data?.posts ?? []) as Post[];
-    if (incoming.length > 0) {
-      setPosts(incoming, { reset: page === 1 });
+    if (posts.length === 0 && !isLoadingMore) { // Only load if no posts are present and not already loading
+      const initialPosts = MOCK_POSTS.slice(0, PAGE_SIZE);
+      setPosts(initialPosts, { reset: true });
+      nextPage(); // Increment page for next load
       setLoading(false);
     }
-  }, [data, page, setPosts, setLoading]);
-
-  // Polling for new posts every 15 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!loading && !isLoadingMore) {
-        refetch({ page: 1, limit: PAGE_SIZE })
-          .then((result) => {
-            const newPosts = result.data?.posts || [];
-            if (newPosts.length > 0) {
-              const currentFirstPost = posts[0];
-              const newFirstPost = newPosts[0];
-              if (!currentFirstPost || newFirstPost.id !== currentFirstPost.id) {
-                console.log('🔄 New posts detected, updating feed');
-                setPosts(newPosts, { reset: true });
-                setTimeout(() => {
-                  const postElements = document.querySelectorAll('[data-post-id]');
-                  postElements.forEach((element, index) => {
-                    if (index < 3) {
-                      element.classList.add('animate-slide-in-up');
-                    }
-                  });
-                }, 100);
-              }
-            }
-          })
-          .catch((error) => {
-            console.error('Polling error:', error);
-          });
-      }
-    }, 15000);
-    
-    return () => clearInterval(interval);
-  }, [loading, isLoadingMore, posts, refetch, setPosts]);
+  }, [posts.length, isLoadingMore, setPosts, nextPage, setLoading]);
 
   // Infinite scroll with debouncing
   useEffect(() => {
     if (!sentinelRef.current || !hasMore || isLoadingMore) return;
-    
+
+    const loadMorePosts = async () => {
+      setIsLoadingMore(true);
+      try {
+        const startIndex = page * PAGE_SIZE;
+        const endIndex = startIndex + PAGE_SIZE;
+        const newPosts = MOCK_POSTS.slice(startIndex, endIndex);
+
+        if (newPosts.length > 0) {
+          setPosts(newPosts);
+          nextPage();
+        } else {
+          // No more posts to load
+          // This will stop the infinite scroll
+          // We need to update the hasMore state in the store
+          // For now, we'll just let the IntersectionObserver stop observing
+        }
+      } catch (error) {
+        console.error('Failed to load more posts:', error);
+        setError('Failed to load more posts');
+      } finally {
+        setIsLoadingMore(false);
+      }
+    };
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -217,34 +212,17 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
             if (debounceRef.current) {
               clearTimeout(debounceRef.current);
             }
-            
-            debounceRef.current = setTimeout(async () => {
-              setIsLoadingMore(true);
-              try {
-                const result = await fetchMore({ 
-                  variables: { page: page + 1, limit: PAGE_SIZE } 
-                });
-                const more = (result.data?.posts ?? []) as Post[];
-                if (more.length > 0) {
-                  setPosts(more);
-                  nextPage();
-                }
-              } catch (error) {
-                console.error('Fetch more error:', error);
-                setError('Failed to load more posts');
-              } finally {
-                setIsLoadingMore(false);
-              }
-            }, DEBOUNCE_MS);
+
+            debounceRef.current = setTimeout(loadMorePosts, DEBOUNCE_MS);
           }
         });
       },
-      { 
+      {
         threshold: INTERSECTION_THRESHOLD,
         rootMargin: '100px'
       }
     );
-    
+
     observer.observe(sentinelRef.current);
     return () => {
       observer.disconnect();
@@ -252,7 +230,7 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
         clearTimeout(debounceRef.current);
       }
     };
-  }, [fetchMore, hasMore, nextPage, page, setPosts, isLoadingMore, setError]);
+  }, [hasMore, isLoadingMore, page, setPosts, nextPage, setError]);
 
   // Memoized content
   const content = useMemo(() => (
@@ -343,7 +321,7 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
     );
   }
 
-  if (loading && posts.length === 0) {
+  if (posts.length === 0 && isLoadingMore) { // Show skeleton only if no posts and still loading
     return (
       <div className="container-responsive py-4">
         <FeedSkeleton count={5} />
@@ -351,7 +329,7 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
     );
   }
 
-  if (!loading && posts.length === 0) {
+  if (posts.length === 0) {
     return (
       <div className="container-responsive py-8">
         <EmptyFeed onNewPost={handleNewPost} />
@@ -363,7 +341,7 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
     <ErrorBoundary>
       <div 
         className={`min-h-screen bg-gray-50 ${className}`}
-        aria-busy={loading || isLoadingMore} 
+        aria-busy={isLoadingMore} 
         aria-live="polite"
       >
         {content}

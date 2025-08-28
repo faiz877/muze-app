@@ -23,6 +23,14 @@ const formatTimestamp = (timestamp: string): string => {
   });
 };
 
+const fallbackImages = [
+  '/test.jpeg',
+  '/test2.jpeg',
+  '/test3.jpg',
+  '/test4.jpg',
+  '/test5.jpg',
+];
+
 export const PostCard: React.FC<PostCardProps> = ({ 
   post, 
   onLike, 
@@ -35,8 +43,17 @@ export const PostCard: React.FC<PostCardProps> = ({
   isReposted = false,
   className = ''
 }) => {
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isImageLoading, setIsImageLoading] = useState(true); // Initialize to true
   const [hasImageError, setHasImageError] = useState(false);
+  const [chosenFallbackImage, setChosenFallbackImage] = useState(''); // New state for chosen fallback
+
+  useEffect(() => {
+    // Reset states when imageUrl changes
+    setIsImageLoading(true);
+    setHasImageError(false);
+    // Choose a random fallback image when the component mounts or imageUrl changes
+    setChosenFallbackImage(fallbackImages[Math.floor(Math.random() * fallbackImages.length)]);
+  }, [post.imageUrl]);
   const [isExpanded, setIsExpanded] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
   
@@ -65,7 +82,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       className={`
         bg-white p-4 transition-all duration-200 hover:bg-gray-50 cursor-pointer
         border-b border-gray-100 last:border-b-0
-        ${post.isReply ? 'ml-6' : ''}
+        ${post.isReply ? 'pl-12' : ''}
         ${className}
       `}
       onClick={() => {/* Handle post navigation */}}
@@ -74,7 +91,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         {/* Author Avatar */}
         <div className="flex-shrink-0">
           <Avatar 
-            src={null}
+            src={post.profileImageUrl}
             alt={post.author}
             fallbackText={post.author}
             size="md"
@@ -98,6 +115,13 @@ export const PostCard: React.FC<PostCardProps> = ({
               {formatTimestamp(post.timestamp)}
             </time>
           </div>
+
+          {/* Reply Indicator */}
+          {post.isReply && post.parentPostId && (
+            <div className="text-sm text-gray-500 mb-2">
+              Replying to <a href={`/post/${post.parentPostId}`} className="text-blue-500 hover:underline">@someuser</a>
+            </div>
+          )}
 
           {/* Post Content */}
           <div className="mb-3">
@@ -124,14 +148,15 @@ export const PostCard: React.FC<PostCardProps> = ({
           {post.imageUrl && (
             <div className="mb-3 overflow-hidden rounded-2xl border border-gray-200">
               {hasImageError ? (
-                <div className="bg-gray-100 p-8 flex items-center justify-center">
-                  <div className="text-center text-gray-500">
-                    <svg className="h-12 w-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-sm">Image could not be loaded</p>
-                  </div>
-                </div>
+                <img
+                  src={chosenFallbackImage}
+                  alt="Image unavailable"
+                  className="h-auto w-full max-h-[512px] object-cover"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Handle image modal/lightbox if needed
+                  }}
+                />
               ) : (
                 <div className="relative">
                   {isImageLoading && (
@@ -142,9 +167,10 @@ export const PostCard: React.FC<PostCardProps> = ({
                       </svg>
                     </div>
                   )}
-                  <img 
-                    src={post.imageUrl} 
-                    alt="Post media" 
+                  <img
+                    key={post.imageUrl} // Add key to force re-mount on imageUrl change
+                    src={post.imageUrl}
+                    alt="Post media"
                     className={`
                       h-auto w-full max-h-[512px] object-cover
                       ${isImageLoading ? 'opacity-0' : 'opacity-100'}

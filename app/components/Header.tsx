@@ -49,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search or find something on Paper"
+                  placeholder="Search or find something..."
                   className="w-full rounded-full border border-gray-200 bg-gray-100 px-4 py-2.5 text-[15px] placeholder:text-gray-500 hover:bg-gray-50 focus:bg-white focus:border-blue-500 focus:outline-none transition-all duration-200"
                   aria-label="Search posts"
                 />
@@ -101,7 +101,7 @@ export const Header: React.FC<HeaderProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search or find something on Paper"
+              placeholder="Search or find something..."
               className="focus-ring w-full rounded-full border border-gray-200 bg-gray-50/80 pl-10 pr-4 py-2.5 text-sm placeholder:text-gray-500 hover:bg-gray-50 focus:bg-white focus:border-orange-300 transition-all duration-200"
               aria-label="Search posts"
             />
