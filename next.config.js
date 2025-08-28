@@ -1,20 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable experimental features if needed
-  experimental: {
-    // Add any experimental features you're using
-  },
-  
   // Image optimization settings
   images: {
-    domains: ['images.unsplash.com'], // Add domains you're using for images
+    domains: ['images.unsplash.com'],
+    unoptimized: true, // Disable optimization to avoid issues
   },
   
-  // Output configuration for deployment
-  output: 'standalone', // Use this for containerized deployments
+  // Ensure static files are properly handled
+  trailingSlash: false,
   
-  // Ensure ES modules work correctly
-  transpilePackages: [],
+  // Force include public directory
+  async rewrites() {
+    return [];
+  },
 };
 
 module.exports = nextConfig;
