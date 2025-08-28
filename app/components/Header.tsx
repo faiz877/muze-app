@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/Button';
+import { Avatar } from './ui/Avatar'; // Added Avatar import
 import type { HeaderProps } from '@/types/graphql';
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -75,9 +76,13 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
               
               {/* Profile Avatar */}
-              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center cursor-pointer">
-                <span className="text-white text-sm font-medium">U</span>
-              </div>
+              <Avatar
+                src="/profile2.jpg"
+                alt="User Profile"
+                fallbackText="User"
+                size="md" // Assuming 'md' size is appropriate for header
+                className="cursor-pointer"
+              />
             </div>
           </div>
         </div>
