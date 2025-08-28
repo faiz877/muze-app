@@ -38,7 +38,10 @@ const initialState: FeedState = {
   activeFilter: 'latest',
 };
 
-export const useFeedStore = create<FeedState & FeedActions>(
+export const useFeedStore = create<
+  FeedState & FeedActions,
+  [["zustand/devtools", never], ["zustand/persist", { activeTab: "for-you" | "following" | "discover"; activeFilter: "latest" | "worldwide"; }]]
+>(
   devtools(
     persist(
       (set, get) => ({

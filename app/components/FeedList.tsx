@@ -1,6 +1,6 @@
 import { MOCK_POSTS, MOCK_POSTS_POOL } from '@/api/mockData';
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { useQuery, useMutation, ApolloError } from '@apollo/client/react';
+import { useQuery, useMutation} from '@apollo/client/react';
 import { GET_POSTS_QUERY } from '@/graphql/operations/queries';
 import { LIKE_POST_MUTATION, REPOST_POST_MUTATION } from '@/graphql/operations/mutations';
 import type { Post, FeedListProps } from '@/types/graphql';
@@ -17,7 +17,7 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
   // ALL HOOKS MUST BE DECLARED AT THE TOP LEVEL - NO CONDITIONAL CALLS
   const { posts, setPosts, prependPost, updatePost, page, nextPage, hasMore, setError, setLoading } = useFeedStore();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [networkError, setNetworkError] = useState<ApolloError | null>(null);
+  const [networkError, setNetworkError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -75,6 +75,8 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
     return () => clearInterval(interval);
   }, [prependPost]);
 
+  type LikePostResponse = { likePost: Post };
+
   const handleLike = useCallback(async (id: string) => {
     const target = posts.find((p) => p.id === id);
     if (!target) return;
@@ -98,7 +100,7 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
     });
     
     try {
-      const response = await likePost({ variables: { id } });
+      const response = await likePost({ variables: { id } }) as { data?: LikePostResponse };
       const updated = response.data?.likePost as Post | undefined;
       if (updated) {
         // In a real app, the server would return the correct like count
@@ -144,7 +146,8 @@ export const FeedList: React.FC<FeedListProps> = ({ className = '' }) => {
     });
     
     try {
-      const response = await repostPost({ variables: { id } });
+      type RepostPostResponse = { repostPost: Post };
+      const response = await repostPost({ variables: { id } }) as { data?: RepostPostResponse };
       const updated = response.data?.repostPost as Post | undefined;
       if (updated) {
         // In a real app, the server would return the correct repost count
