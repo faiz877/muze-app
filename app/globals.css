@@ -3,6 +3,29 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Design system tokens */
+  --primary: #f97316; /* orange-500 */
+  --primary-hover: #ea580c; /* orange-600 */
+  --primary-light: #fed7aa; /* orange-200 */
+  --border: #e5e7eb; /* gray-200 */
+  --border-light: #f3f4f6; /* gray-100 */
+  --surface: #ffffff;
+  --surface-hover: #f9fafb; /* gray-50 */
+  --text-primary: #111827; /* gray-900 */
+  --text-secondary: #6b7280; /* gray-500 */
+  --text-muted: #9ca3af; /* gray-400 */
+  
+  /* Animation durations */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  
+  /* Responsive breakpoints */
+  --mobile-max: 767px;
+  --tablet-min: 768px;
+  --tablet-max: 1023px;
+  --desktop-min: 1024px;
 }
 
 @theme inline {
@@ -12,15 +35,176 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
+/* Force light theme for now - disable dark mode */
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --surface: #1f2937;
+    --surface-hover: #374151;
+    --border: #374151;
+    --border-light: #4b5563;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
   }
-}
+} */
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  scroll-behavior: smooth;
+}
+
+/* Custom animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseBar {
+  0%, 100% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+}
+
+@keyframes bounce-gentle {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-4px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes wiggle {
+  0%, 7% { transform: rotateZ(0); }
+  15% { transform: rotateZ(-15deg); }
+  20% { transform: rotateZ(10deg); }
+  25% { transform: rotateZ(-10deg); }
+  30% { transform: rotateZ(6deg); }
+  35% { transform: rotateZ(-4deg); }
+  40%, 100% { transform: rotateZ(0); }
+}
+
+/* Utility classes */
+.elevate { 
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  transition: box-shadow var(--duration-normal) ease;
+}
+
+.elevate:hover {
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+}
+
+.focus-ring { 
+  outline: none;
+  transition: all var(--duration-fast) ease;
+}
+
+.focus-ring:focus-visible { 
+  box-shadow: 0 0 0 2px var(--primary), 0 0 0 4px rgba(249,115,22,0.1);
+}
+
+.card { 
+  border-radius: 0.75rem; 
+  border: 1px solid #e5e7eb; 
+  background: #ffffff; 
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 200ms ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-color: #d1d5db;
+}
+
+.muted { 
+  color: var(--text-secondary); 
+}
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+
+/* Animation utility classes */
+.animate-slide-in-up { animation: slideInUp var(--duration-slow) ease-out; }
+.animate-fade-in { animation: fadeIn var(--duration-normal) ease-out; }
+.animate-scale-in { animation: scaleIn var(--duration-normal) ease-out; }
+.animate-bounce-gentle { animation: bounce-gentle 1s ease-in-out; }
+.animate-wiggle { animation: wiggle 600ms ease-in-out; }
+.animate-pulse-bar { animation: pulseBar 2s ease-in-out infinite; }
+
+/* Responsive utilities */
+.container-responsive {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .container-responsive {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    max-width: 980px;
+    padding: 0 2rem;
+  }
+}
+
+/* Touch targets for mobile */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (max-width: 767px) {
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Smooth scrolling for better UX */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* Loading state overlay - keep light */
+.loading-overlay {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(4px);
 }
